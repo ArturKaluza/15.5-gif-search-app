@@ -8,14 +8,14 @@ App = React.createClass({
   },
 
   render: function() {
-
-      var styles = {
+      
+    const styles = {
           margin: '0 auto',
           textAlign: 'center',
           width: '90%'
-      };
+    };
 
-      return (
+    return (
         <div style={styles}>
               <h1>Wyszukiwarka GIFow!</h1>
               <p>Znajdź gifa na <a href='http://giphy.com'>giphy</a>. Naciskaj enter, aby pobrać kolejne gify.</p>
@@ -26,36 +26,50 @@ App = React.createClass({
               sourceUrl={this.state.gif.sourceUrl}
             />
         </div>
-      );
+    );
   },
 
-  handleSearch: function(searchingText) {  // 1.
+  handleSearch: function(searchingText) {  
     this.setState({
-      loading: true  // 2.
+      loading: true  
     });
-    this.getGif(searchingText, function(gif) {  // 3.
-      this.setState({  // 4
-        loading: false,  // a
-        gif: gif,  // b
-        searchingText: searchingText  // c
+    this.getGif(searchingText, function(gif) {  
+      this.setState({  
+        loading: false,  
+        gif: gif,  
+        searchingText: searchingText  
       });
     }.bind(this));
   },
-
-  getGif: function(searchingText, callback) {  // 1.
-    var url = 'https://api.giphy.com' + '/v1/gifs/random?api_key=' + 'w19RBobnK7PFxjAQHPxHidsElU1lxQwu' + '&tag=' + searchingText;  // 2.
-    var xhr = new XMLHttpRequest();  // 3.
-    xhr.open('GET', url);
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-           var data = JSON.parse(xhr.responseText).data; // 4.
-            var gif = {  // 5.
-                url: data.fixed_width_downsampled_url,
-                sourceUrl: data.url
+  
+  getGif: function(searchingText, callback) {
+    let url = 'https://api.giphy.com' + '/v1/gifs/random?api_key=' + 'w19RBobnK7PFxjAQHPxHidsElU1lxQwu' + '&tag=' + searchingText;
+    return new Promise(
+      function (resolve, reject) {
+            const request = new XMLHttpRequest();
+            request.onload = function () {
+                if (this.status === 200) {
+                    resolve(this.response);                  
+                } else {
+                    reject(new Error(this.statusText)); 
+                }
             };
-            callback(gif);  // 6.
-        }
-    };
-    xhr.send();
+            request.onerror = function () {
+                reject(new Error(
+                   `XMLHttpRequest Error: ${this.statusText}`));
+            };
+            request.open('GET', url);
+            request.send();
+        }).then(response => {
+          let data = JSON.parse(response).data;
+          let gif = {  
+              url: data.fixed_width_downsampled_url,
+              sourceUrl: data.url
+          };
+          callback(gif);
+        })
+        .catch(err => console.log(err));
   }
 });
+
+  
